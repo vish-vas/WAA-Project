@@ -1,0 +1,152 @@
+<proxy  xmlns="http://ws.apache.org/ns/synapse"
+        name="GoogleBookProxyService" 
+        transports="https http" 
+        startOnLoad="true"
+        trace="disable">
+    <description/>
+    <target>
+        <inSequence>
+            <log level="full" description="Log SOAP request"/>
+			      <property expression="//ns:GetBookInformation/isbn"
+                      name="uri.var.isbn" 
+                      scope="default" 
+                      type="STRING" 
+                      xmlns:ns="http://google.waa.swin.edu.au"/>
+            <property name="messageType" 
+                      value="application/json" 
+                      scope="axis2" 
+                      type="STRING" 
+                      description="Transform message format to JSON"/>
+            <send>
+                <endpoint name="GoogleBookEP">
+                    <http method="GET" 
+                      uri-template="https://www.googleapis.com/books/v1/volumes?q=isbn:{uri.var.isbn}&amp;key=AIzaSyAOX3v6Jg8iZwUbdpR_BDcaHoI-UD_yF2U"/>
+                </endpoint>
+            </send>
+        </inSequence>
+        <outSequence>
+            <log description="Log returned JSON payload">
+                <property name="JSON-Payload" expression="json-eval($.)"/>
+            </log>
+			
+			<filter regex="0" source="json-eval($.totalItems)">
+			<then>			  
+			  <payloadFactory description="Extract book data" media-type="xml">
+                <format>
+                    <ns:GetBookInformationResponse xmlns="" xmlns:ns="http://google.waa.swin.edu.au">
+                        <isValidISBN>false</isValidISBN>
+                        <bookID/>
+						            <title/>
+                        <authors/>
+            						<isbn/>
+            						<isbn13/>
+            						<publisher/>
+            						<publishedDate/>
+            						<averageRating/>
+            						<availability/>
+                    </ns:GetBookInformationResponse>
+                </format>
+                <args/>
+			  </payloadFactory>
+			</then>
+			<else>
+			  <payloadFactory description="Extract book data" media-type="xml">
+                <format>
+                    <ns:GetBookInformationResponse xmlns="" xmlns:ns="http://google.waa.swin.edu.au">
+                        <isValidISBN>true</isValidISBN>
+                        <bookID>$1</bookID>
+						<title>$2</title>
+                        <authors>$3</authors>
+						<isbn>$4</isbn>
+						<isbn13>$5</isbn13>
+						<publisher>$6</publisher>
+						<publishedDate>$7</publishedDate>
+						<averageRating>$8</averageRating>
+						<availability>$9</availability>
+                    </ns:GetBookInformationResponse>
+                </format>
+                <args>
+					<arg evaluator="json" expression="$.items[0].id"/>
+					<arg evaluator="json" expression="$.items[0].volumeInfo.title"/>
+					<arg evaluator="json" expression="$.items[0].volumeInfo.authors[0]"/>
+					<arg evaluator="json" expression="$.items[0].volumeInfo.industryIdentifiers[?(@.type=='ISBN_10')].identifier[0]"/>
+					<arg evaluator="json" expression="$.items[0].volumeInfo.industryIdentifiers[?(@.type=='ISBN_13')].identifier[0]"/>
+					<arg evaluator="json" expression="$.items[0].volumeInfo.publisher"/>
+					<arg evaluator="json" expression="$.items[0].volumeInfo.publishedDate"/>
+					<arg evaluator="json" expression="$.items[0].volumeInfo.averageRating"/>
+					<arg evaluator="json" expression="$.items[0].saleInfo.saleability"/>
+                </args>
+			  </payloadFactory>
+			</else>
+			</filter>
+
+            <property name="messageType" 
+                      value="text/xml" 
+                      scope="axis2" 
+                      type="STRING" 
+                      description="Transform message format to SOAP"/>
+            <send/>
+        </outSequence>
+		<faultSequence/>    
+    </target>
+    <publishWSDL>
+    	<wsdl:definitions xmlns:ns="http://google.waa.swin.edu.au" xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/" xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/" xmlns:xsd="http://www.w3.org/2001/XMLSchema" name="GoogleBookProxyService" targetNamespace="http://google.waa.swin.edu.au">
+  <wsdl:types>
+    <xsd:schema targetNamespace="http://google.waa.swin.edu.au">
+      <xsd:element name="GetBookInformation">
+        <xsd:complexType>
+          <xsd:sequence>
+            <xsd:element name="isbn" type="xsd:string"/>
+          </xsd:sequence>
+        </xsd:complexType>
+      </xsd:element>
+      <xsd:element name="GetBookInformationResponse">
+        <xsd:complexType>
+          <xsd:sequence>
+          	<xsd:element name="isValidISBN" type="xsd:string" />
+          	<xsd:element name="bookID" type="xsd:string"></xsd:element>
+          	<xsd:element name="title" type="xsd:string"></xsd:element>
+          	<xsd:element name="authors" type="xsd:string"></xsd:element>
+          	<xsd:element name="isbn" type="xsd:string"></xsd:element>
+          	<xsd:element name="isbn13" type="xsd:string"></xsd:element>
+          	<xsd:element name="publisher" type="xsd:string"></xsd:element>
+          	<xsd:element name="publishedDate" type="xsd:string"></xsd:element>
+          	<xsd:element name="averageRating" type="xsd:string"></xsd:element>
+          	<xsd:element name="availability" type="xsd:string"></xsd:element>
+          </xsd:sequence>
+        </xsd:complexType>
+      </xsd:element>
+    </xsd:schema>
+  </wsdl:types>
+  <wsdl:message name="GetBookInformationRequest">
+    <wsdl:part element="ns:GetBookInformation" name="parameters"/>
+  </wsdl:message>
+  <wsdl:message name="GetBookInformationResponse">
+    <wsdl:part element="ns:GetBookInformationResponse" name="parameters"/>
+  </wsdl:message>
+  <wsdl:portType name="GoogleBookProxyServicePortType">
+    <wsdl:operation name="GetBookInformation">
+      <wsdl:input message="ns:GetBookInformationRequest"/>
+      <wsdl:output message="ns:GetBookInformationResponse"/>
+    </wsdl:operation>
+  </wsdl:portType>
+  <wsdl:binding name="GoogleBookProxyServiceSOAP" type="ns:GoogleBookProxyServicePortType">
+    <soap:binding style="document" transport="http://schemas.xmlsoap.org/soap/http"/>
+    <wsdl:operation name="GetBookInformation">
+      <soap:operation soapAction="http://google.waa.swin.edu.au/NewOperation"/>
+      <wsdl:input>
+        <soap:body use="literal"/>
+      </wsdl:input>
+      <wsdl:output>
+        <soap:body use="literal"/>
+      </wsdl:output>
+    </wsdl:operation>
+  </wsdl:binding>
+  <wsdl:service name="GoogleBookProxyService">
+    <wsdl:port binding="ns:GoogleBookProxyServiceSOAP" name="GoogleBookProxyServicePort">
+      <soap:address location="http://localhost:8281/services/GoogleBookProxyService"/>
+    </wsdl:port>
+  </wsdl:service>
+</wsdl:definitions>
+    </publishWSDL>
+</proxy>

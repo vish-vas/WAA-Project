@@ -1,0 +1,90 @@
+<wsdl:definitions xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/" xmlns:ns="http://student.waa.swin.edu.au" xmlns:wsaw="http://www.w3.org/2006/05/addressing/wsdl" xmlns:mime="http://schemas.xmlsoap.org/wsdl/mime/" xmlns:http="http://schemas.xmlsoap.org/wsdl/http/" xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:soap12="http://schemas.xmlsoap.org/wsdl/soap12/" xmlns:ns1="http://org.apache.axis2/xsd" xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/" targetNamespace="http://student.waa.swin.edu.au">
+    <wsdl:documentation>StudentService</wsdl:documentation>
+    <wsdl:types>
+        <xs:schema attributeFormDefault="qualified" elementFormDefault="qualified" targetNamespace="http://student.waa.swin.edu.au">
+            <xs:element name="authenticateStudent">
+                <xs:complexType>
+                    <xs:sequence>
+                        <xs:element minOccurs="0" name="enteredId" nillable="true" type="xs:string"></xs:element>
+                        <xs:element minOccurs="0" name="enteredPin" nillable="true" type="xs:string"></xs:element>
+                    </xs:sequence>
+                </xs:complexType>
+            </xs:element>
+            <xs:element name="authenticateStudentResponse">
+                <xs:complexType>
+                    <xs:sequence>
+                        <xs:element minOccurs="0" name="return" nillable="true" type="xs:string"></xs:element>
+                    </xs:sequence>
+                </xs:complexType>
+            </xs:element>
+        </xs:schema>
+    </wsdl:types>
+    <wsdl:message name="authenticateStudentRequest">
+        <wsdl:part name="parameters" element="ns:authenticateStudent"></wsdl:part>
+    </wsdl:message>
+    <wsdl:message name="authenticateStudentResponse">
+        <wsdl:part name="parameters" element="ns:authenticateStudentResponse"></wsdl:part>
+    </wsdl:message>
+    <wsdl:portType name="StudentServicePortType">
+        <wsdl:operation name="authenticateStudent">
+            <wsdl:input message="ns:authenticateStudentRequest" wsaw:Action="urn:authenticateStudent"></wsdl:input>
+            <wsdl:output message="ns:authenticateStudentResponse" wsaw:Action="urn:authenticateStudentResponse"></wsdl:output>
+        </wsdl:operation>
+    </wsdl:portType>
+    <wsdl:binding name="StudentServiceSoap11Binding" type="ns:StudentServicePortType">
+        <soap:binding transport="http://schemas.xmlsoap.org/soap/http" style="document"></soap:binding>
+        <wsdl:operation name="authenticateStudent">
+            <soap:operation soapAction="urn:authenticateStudent" style="document"></soap:operation>
+            <wsdl:input>
+                <soap:body use="literal"></soap:body>
+            </wsdl:input>
+            <wsdl:output>
+                <soap:body use="literal"></soap:body>
+            </wsdl:output>
+        </wsdl:operation>
+    </wsdl:binding>
+    <wsdl:binding name="StudentServiceSoap12Binding" type="ns:StudentServicePortType">
+        <soap12:binding transport="http://schemas.xmlsoap.org/soap/http" style="document"></soap12:binding>
+        <wsdl:operation name="authenticateStudent">
+            <soap12:operation soapAction="urn:authenticateStudent" style="document"></soap12:operation>
+            <wsdl:input>
+                <soap12:body use="literal"></soap12:body>
+            </wsdl:input>
+            <wsdl:output>
+                <soap12:body use="literal"></soap12:body>
+            </wsdl:output>
+        </wsdl:operation>
+    </wsdl:binding>
+    <wsdl:binding name="StudentServiceHttpBinding" type="ns:StudentServicePortType">
+        <http:binding verb="POST"></http:binding>
+        <wsdl:operation name="authenticateStudent">
+            <http:operation location="authenticateStudent"></http:operation>
+            <wsdl:input>
+                <mime:content type="text/xml" part="parameters"></mime:content>
+            </wsdl:input>
+            <wsdl:output>
+                <mime:content type="text/xml" part="parameters"></mime:content>
+            </wsdl:output>
+        </wsdl:operation>
+    </wsdl:binding>
+    <wsdl:service name="StudentService">
+        <wsdl:port name="StudentServiceHttpsSoap11Endpoint" binding="ns:StudentServiceSoap11Binding">
+            <soap:address location="https://10.211.55.12:9443/services/StudentService.StudentServiceHttpsSoap11Endpoint/"></soap:address>
+        </wsdl:port>
+        <wsdl:port name="StudentServiceHttpSoap11Endpoint" binding="ns:StudentServiceSoap11Binding">
+            <soap:address location="http://10.211.55.12:9763/services/StudentService.StudentServiceHttpSoap11Endpoint/"></soap:address>
+        </wsdl:port>
+        <wsdl:port name="StudentServiceHttpsSoap12Endpoint" binding="ns:StudentServiceSoap12Binding">
+            <soap12:address location="https://10.211.55.12:9443/services/StudentService.StudentServiceHttpsSoap12Endpoint/"></soap12:address>
+        </wsdl:port>
+        <wsdl:port name="StudentServiceHttpSoap12Endpoint" binding="ns:StudentServiceSoap12Binding">
+            <soap12:address location="http://10.211.55.12:9763/services/StudentService.StudentServiceHttpSoap12Endpoint/"></soap12:address>
+        </wsdl:port>
+        <wsdl:port name="StudentServiceHttpsEndpoint" binding="ns:StudentServiceHttpBinding">
+            <http:address location="https://10.211.55.12:9443/services/StudentService.StudentServiceHttpsEndpoint/"></http:address>
+        </wsdl:port>
+        <wsdl:port name="StudentServiceHttpEndpoint" binding="ns:StudentServiceHttpBinding">
+            <http:address location="http://10.211.55.12:9763/services/StudentService.StudentServiceHttpEndpoint/"></http:address>
+        </wsdl:port>
+    </wsdl:service>
+</wsdl:definitions>

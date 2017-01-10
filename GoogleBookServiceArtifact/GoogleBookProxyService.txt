@@ -1,0 +1,89 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<proxy xmlns="http://ws.apache.org/ns/synapse"
+       name="GoogleBookProxyService"
+       transports="http https"
+       startOnLoad="true"
+       trace="disable">
+   <description/>
+   <target>
+      <inSequence>
+         <log level="full" description="Log SOAP request"/>
+         <property xmlns:ns="http://google.waa.swin.edu.au"
+                   name="uri.var.isbn"
+                   expression="//ns:GetBookInformation/isbn"
+                   scope="default"
+                   type="STRING"/>
+         <property name="messageType"
+                   value="application/json"
+                   scope="axis2"
+                   type="STRING"
+                   description="Transform message format to JSON"/>
+         <send>
+            <endpoint name="GoogleBookEP">
+               <http method="GET"
+                     uri-template="https://www.googleapis.com/books/v1/volumes?q=isbn:{uri.var.isbn}&amp;key=AIzaSyAOX3v6Jg8iZwUbdpR_BDcaHoI-UD_yF2U"/>
+            </endpoint>
+         </send>
+      </inSequence>
+      <outSequence>
+         <log description="Log returned JSON payload">
+            <property name="JSON-Payload" expression="json-eval($.)"/>
+         </log>
+         <script language="js">
+         <![CDATA[
+         var jsonObj=mc.getPayloadJSON();
+
+if(jsonObj.totalItems=="0")
+{  
+mc.setPayloadXML(
+<ns:GetBookInformationResponse xmlns:ns="http://google.waa.swin.edu.au">
+                        <isValidISBN>false</isValidISBN>
+                        <bookID/>
+                        <title/>
+                        <authors/>
+                        <isbn/>
+                        <isbn13/>
+                        <publisher/>
+                        <publishedDate/>
+                        <averageRating/>
+                        <availability/>
+                     </ns:GetBookInformationResponse>
+                     );
+                }
+                else
+                {
+                var bookId = jsonObj.items[0].id;
+                var bookTitle = jsonObj.items[0].volumeInfo.title;
+                var bookAuthors = jsonObj.items[0].volumeInfo.authors[0];
+                var bookIsbn = jsonObj.items[0].volumeInfo.industryIdentifiers[1].identifier;
+                var bookIsbn13 = jsonObj.items[0].volumeInfo.industryIdentifiers[0].identifier;
+                var bookPublisher = jsonObj.items[0].volumeInfo.publisher;
+                var bookPublishDate = jsonObj.items[0].volumeInfo.publishedDate;
+                var bookRating = jsonObj.items[0].volumeInfo.averageRating;
+                var bookAvailability = jsonObj.items[0].saleInfo.saleability;
+               
+               mc.setPayloadXML(<ns:GetBookInformationResponse xmlns:ns="http://google.waa.swin.edu.au">
+                        <isValidISBN>true</isValidISBN>
+                        <bookID>{bookId}</bookID>
+                        <title>{bookTitle}</title>
+                        <authors>{bookAuthors}</authors>
+                        <isbn>{bookIsbn}</isbn>
+                        <isbn13>{bookIsbn13}</isbn13>
+                        <publisher>{bookPublisher}</publisher>
+                        <publishedDate>{bookPublishDate}</publishedDate>
+                        <averageRating>{bookRating}</averageRating>
+                        <availability>{bookAvailability}</availability>
+                     </ns:GetBookInformationResponse>
+                     );
+                     }]]>
+                 </script>
+         <property name="messageType"
+                   value="text/xml"
+                   scope="axis2"
+                   type="STRING"
+                   description="Transform message format to SOAP"/>
+         <send/>
+      </outSequence>
+      <faultSequence/>
+   </target>
+</proxy>
