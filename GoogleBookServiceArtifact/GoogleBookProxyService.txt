@@ -21,7 +21,7 @@
          <send>
             <endpoint name="GoogleBookEP">
                <http method="GET"
-                     uri-template="https://www.googleapis.com/books/v1/volumes?q=isbn:{uri.var.isbn}&amp;key=AIzaSyAOX3v6Jg8iZwUbdpR_BDcaHoI-UD_yF2U"/>
+                     uri-template="https://www.googleapis.com/books/v1/volumes?q=isbn:{uri.var.isbn}&amp;key=AIzaSyAOX3vjdG8iZwUbdpR_BDcaHoI-UD_yF2U"/>
             </endpoint>
          </send>
       </inSequence>
